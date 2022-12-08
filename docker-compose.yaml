@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  loader:
+    profiles:
+      - "loader"
+    build:
+      dockerfile: docker/loader/Dockerfile
+    environment:
+      BACKUP_FILE: ${BACKUP_FILE:-public_release.dump}
+    volumes:
+      - ./data/neo4j:/data
+      - ./data/releases:/releases
+  neo4j:
+    image: neo4j:latest
+    restart: always
+    environment:
+      NEO4J_AUTH: none
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - ./data/neo4j:/data
+  jupyter:
+    build:
+      dockerfile: ./docker/jupyter/Dockerfile
+    restart: always
+    ports:
+      - 7777:8888
+    volumes:
+      - ./src/:/home/jovyan/work
+    depends_on:
+      - neo4j
+    environment:
+      NOTEBOOK_ARGS: --NotebookApp.token=''
+      GRAPH_DSN: neo4j://neo4j@neo4j/neo4j
