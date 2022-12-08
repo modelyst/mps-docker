@@ -9,14 +9,16 @@ s3://modelyst.rw/neo4j_dumps/public-release-neo4j-Dec-1-2022-09-01-23.dump
 ```
 To download this file locally please use the AWS CLI tool with the correct credentials configured for the following command:
 ```Bash
-aws s3 --profile PROFILE cp s3://modelyst.rw/neo4j_dumps/public-release-neo4j-Dec-1-2022-09-01-23.dump ./data/releases/public_release.dump
+aws s3 --profile PROFILE cp s3://modelyst.rw/neo4j_dumps/public-release-neo4j-Dec-1-2022-09-01-23.dump ./data/releases/public-release.dump
 ```
+
+If the file is downloaded to another location, it must be moved to within the ./data/releases folder and the file should be named `public-release.dump`. 
 ## Load the database
 Once the file has successfully been downloaded it can be loaded into the neo4j docker container volume with the following command:
 ```
 docker-compose run --rm loader
 ```
-If the name of the release dump file is different than `public_release.dump.` it can be configured by setting the `DUMP_FILE` environmental variable prior to loading
+If the name of the release dump file is different than `public-release.dump.` it can be configured by setting the `DUMP_FILE` environmental variable prior to loading
 ```Bash
 BACKUP_FILE=foo.dump dc run --rm loader
 ```

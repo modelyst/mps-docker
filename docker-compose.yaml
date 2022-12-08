@@ -4,9 +4,10 @@ services:
     profiles:
       - "loader"
     build:
+      context: .
       dockerfile: docker/loader/Dockerfile
     environment:
-      BACKUP_FILE: ${BACKUP_FILE:-public_release.dump}
+      BACKUP_FILE: ${BACKUP_FILE:-public-release.dump}
     volumes:
       - ./data/neo4j:/data
       - ./data/releases:/releases
