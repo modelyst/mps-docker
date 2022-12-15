@@ -2,16 +2,20 @@ version: '3.7'
 services:
   loader:
     profiles:
+      - "all"
       - "loader"
     build:
       context: .
-      dockerfile: docker/loader/Dockerfile
+      dockerfile: docker/neo4j-loader/Dockerfile
     environment:
       BACKUP_FILE: ${BACKUP_FILE:-public-release.dump}
     volumes:
       - ./data/neo4j:/data
-      - ./data/releases:/releases
+      - ./data/releases/neo4j:/releases/
   neo4j:
+    profiles:
+      - "all"
+      - "neo4j"
     image: neo4j:4.4.15
     restart: always
     environment:
@@ -22,15 +26,65 @@ services:
     volumes:
       - ./data/neo4j:/data
   jupyter:
+    profiles:
+      - "all"
+      - "jupyter"
     build:
+      context: .
       dockerfile: ./docker/jupyter/Dockerfile
     restart: always
     ports:
-      - 7777:8888
+      - 8888:8888
     volumes:
-      - ./src/:/home/jovyan/work
+      - ./src/:/home/jovyan/examples
+      - ./user/:/home/jovyan/user
     depends_on:
       - neo4j
+      - postgres
     environment:
       NOTEBOOK_ARGS: --NotebookApp.token=''
-      GRAPH_DSN: neo4j://neo4j@neo4j/neo4j
+      MPS_NEO4J_DSN: neo4j://neo4j@neo4j/neo4j
+      MPS_POSTGRES_DSN: postgresql://mps_user:mps_password@postgres/mps
+      MPS_POSTGRES_SCHEMA: public_release
+  postgres-loader:
+    profiles:
+      - "all"
+      - "loader"
+      - "postgres"
+    image: postgres:14
+    environment:
+      PGHOST: 'postgres'
+      PGDATABASE: 'mps'
+      PGUSER: 'mps_user'
+      PGPASSWORD: 'mps_password'
+    volumes:
+      - ./data/releases/postgres:/releases/
+    command: >
+      bash -c "mkdir -p /extracted/ &&
+      tar -zxvf /releases/${BACKUP_FILE:-public_release.tar.gz} --directory /extracted/ &&
+      psql -d postgres -c 'drop database if exists mps;' &&
+      createdb mps &&
+      psql -f /extracted/*.sql"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    profiles:
+      - "all"
+      - "postgres"
+    image: postgres:14
+    environment:
+      POSTGRES_DB: 'mps'
+      POSTGRES_USER: 'mps_user'
+      POSTGRES_PASSWORD: 'mps_password'
+    ports:
+      - 7777:5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: pg_isready -U backend_user -d backend_db
+      interval: 10s
+      timeout: 3s
+      retries: 3
+volumes:
+  pg_data:
