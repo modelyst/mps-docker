@@ -1,17 +1,18 @@
 version: '3.7'
 services:
-  loader:
+  neo4j-loader:
     profiles:
-      - "all"
       - "loader"
-    build:
-      context: .
-      dockerfile: docker/neo4j-loader/Dockerfile
-    environment:
-      BACKUP_FILE: ${BACKUP_FILE:-public-release.dump}
+    image: neo4j:4.4.15
     volumes:
       - ./data/neo4j:/data
       - ./data/releases/neo4j:/releases/
+    command: >
+      bash -c "neo4j-admin \ 
+      load \ 
+      --database=neo4j \
+      --from=/releases/${BACKUP_FILE:-public-release.dump} \
+      --force"
   neo4j:
     profiles:
       - "all"
