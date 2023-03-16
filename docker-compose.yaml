@@ -3,7 +3,7 @@ services:
   neo4j-loader:
     profiles:
       - "loader"
-    image: neo4j:4.4.15
+    image: neo4j:5.5
     volumes:
       - neo4j_data:/data
       - ./data/releases/neo4j:/releases/
@@ -11,13 +11,13 @@ services:
       bash -c "neo4j-admin \ 
       load \ 
       --database=neo4j \
-      --from=/releases/${BACKUP_FILE:-public-release.dump} \
+      --from=/releases/${NEO4J_BACKUP_FILE:-public-release.dump} \
       --force"
   neo4j:
     profiles:
       - "all"
       - "neo4j"
-    image: neo4j:4.4.15
+    image: neo4j:5.5
     restart: always
     environment:
       NEO4J_AUTH: none
@@ -62,7 +62,7 @@ services:
       - ./data/releases/postgres:/releases/
     command: >
       bash -c "mkdir -p /extracted/ &&
-      tar -zxvf /releases/${BACKUP_FILE:-public_release.tar.gz} --directory /extracted/ &&
+      tar -zxvf /releases/${POSTGRES_BACKUP_FILE:-public_release.tar.gz} --directory /extracted/ &&
       psql -d postgres -c 'drop database if exists mps;' &&
       createdb mps &&
       psql -f /extracted/*.sql"
