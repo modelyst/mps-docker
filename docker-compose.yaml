@@ -9,10 +9,11 @@ services:
       - ./data/releases/neo4j:/releases/
     command: >
       bash -c "neo4j-admin \ 
-      load \ 
-      --database=neo4j \
-      --from=/releases/${NEO4J_BACKUP_FILE:-public-release.dump} \
-      --force"
+      database \
+      load \
+      neo4j \
+      --from-path=/releases/ \
+      --overwrite-destination=true"
   neo4j:
     profiles:
       - "all"
