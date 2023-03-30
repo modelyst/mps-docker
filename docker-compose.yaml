@@ -14,6 +14,25 @@ services:
       neo4j \
       --from-path=/releases/ \
       --overwrite-destination=true"
+  
+  pg4j:
+    profiles:
+      - "all"
+      - "pg4j"
+    build:
+      context: .
+      dockerfile: ./docker/pg4j/Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - neo4j
+      - postgres
+    command: >
+      bash -c "python -m pg4j import --data-dir /pg4j_output --overwrite --id-type STRING --command neo4j-admin"
+    volumes:
+      - ./data/pg4j_output:/pg4j_output/
+      - neo4j_data:/var/lib/neo4j/data/
+
   neo4j:
     profiles:
       - "all"
